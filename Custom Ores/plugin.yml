@@ -1,0 +1,11 @@
+name: CustomOres
+description: Add your own ores.
+author: FlyFunMan
+api-version: 1.13
+main: me.flyfunman.customos.Main
+version: 1.1
+softdepend: [Oraxen]
+commands:
+  customores:
+    description: Opens the help menu for CustomOres.
+    aliases: [co, cores, coreos]

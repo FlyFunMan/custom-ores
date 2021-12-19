@@ -1,0 +1,21 @@
+#Enable or disable all ore spawning and recipes
+Enabled: true
+
+#Set if ores should generate in all worlds
+All Worlds: true
+
+#If All Worlds is false, these worlds will still spawn ores (whitelist).
+#If All Worlds is true, these worlds will not spawn ores (blacklist).
+Worlds:
+  -
+  -
+  -
+
+Drop in Creative: false
+
+#Items on this list will break ores instantly.
+Tools:
+  - IRON_PICKAXE
+  - GOLDEN_PICKAXE
+  - DIAMOND_PICKAXE
+  - NETHERITE_PICKAXE
