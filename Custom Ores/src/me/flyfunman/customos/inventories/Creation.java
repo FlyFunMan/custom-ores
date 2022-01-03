@@ -12,6 +12,9 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
+
+import me.flyfunman.customos.Main;
 
 public class Creation {
 	ItemStack gray;
@@ -21,7 +24,9 @@ public class Creation {
 	public static Inventory lore = Bukkit.createInventory(null, 9, ChatColor.BLUE + "Would you like a lore?");
 	public Integer[] slots = { 10, 11, 12, 19, 20, 21, 28, 29, 30, 23 };
 	public List<String> enchants = new ArrayList<>();
+	public List<String> enPlugins = new ArrayList<>();
 	static Creation creation = new Creation();
+	Plugin plugin = Main.getPlugin(Main.class);
 
 	public static Creation get() {
 		return creation;
@@ -39,11 +44,30 @@ public class Creation {
 
 		// item
 		setGray(item, 9);
+		
+		boolean messaged = false;
 
 		// enchants
 		for (Enchantment en : Enchantment.values()) {
+			String name = en.getKey().toString();
+			String name1 = name.substring(name.indexOf(":")+1);
+			name1.trim();
+
 			enchants.add(ChatColor.LIGHT_PURPLE
-					+ WordUtils.capitalize(en.getKey().toString().replace("minecraft:", "").replace('_', ' ')) + ":");
+					+ WordUtils.capitalize(name1.replace('_', ' ')) + ":");
+			String key = en.getKey().getNamespace();
+			
+			if (key != "minecraft" && !enPlugins.contains(key)) {
+				enPlugins.add(key);
+				
+				if (messaged == false && !plugin.getConfig().getBoolean("Custom Enchantments Display")) {
+					messaged = true;
+					
+					Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+							"&bCustom &aOres: &cYou appear to have a custom enchantments plugin, if you would like to use this plugin "
+							+ "with Custom Ores, you should probably enable &o&eCustom Enchantments Display &r&cin the config"));
+				}
+			}
 		}
 		Collections.sort(enchants);
 
@@ -90,6 +114,7 @@ public class Creation {
 		ore2.setItem(22, light);
 		ore2.setItem(24, loreItem(Material.SIGN, ChatColor.BOLD + "Amount Per Chunk", "3"));
 		ore2.setItem(29, loreItem(Material.BEDROCK, ChatColor.GREEN + "Min Spawn Height", "Y: 0"));
+		ore2.setItem(31, loreItem(Material.FURNACE, ChatColor.AQUA + "Ore Type", "Smeltable"));
 		ore2.setItem(35, get().arrow());
 		return ore2;
 	}
@@ -105,22 +130,33 @@ public class Creation {
 		return recipe;
 	}
 
-	public Inventory Enchant() {
-		Inventory item2 = Bukkit.createInventory(null, 54, ChatColor.DARK_GREEN + "Enchantments");
+	public Inventory Enchant(int page) {
+		Inventory item2 = Bukkit.createInventory(null, 54, ChatColor.DARK_GREEN + "Enchantments Page " + (page + 1));
 		int num = 0;
 		setGray(item2, 54);
-		item2.setItem(53, get().arrow());
-		for (String en : enchants) {
-			item2.setItem(num, createBook(en, 0));
+		item2.setItem(53, arrow());
+		
+		//fill enchants
+		for (int i = page * 45; i < enchants.size() && i < page * 45 + 45; i++) {
+			item2.setItem(num, createBook(enchants.get(i), 0));
 			num++;
 		}
+		
+		//add page arrows
+		if (enchants.size() > page * 45 + 45) item2.setItem(50, arrow("Page " + (page + 2)));
+		if (page != 0) item2.setItem(48, arrow("Page " + page));
+		
 		return item2;
 	}
 
 	private ItemStack arrow() {
+		return arrow("Next");
+	}
+	
+	private ItemStack arrow(String name) {
 		ItemStack arrow = new ItemStack(Material.ARROW);
 		ItemMeta aMeta = arrow.getItemMeta();
-		aMeta.setDisplayName("Next");
+		aMeta.setDisplayName(name);
 		arrow.setItemMeta(aMeta);
 		return arrow;
 	}

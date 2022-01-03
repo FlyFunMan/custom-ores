@@ -41,6 +41,7 @@ public class Inventories implements Listener {
 	public static List<UUID> addLore = new ArrayList<>();
 	public static HashMap<UUID, String> values = new HashMap<>();
 	public static HashMap<UUID, HashMap<String, Integer>> enchant = new HashMap<>();
+	public static HashMap<UUID, List<Inventory>> enInv = new HashMap<>();
 	public static HashMap<UUID, List<ItemStack>> settings = new HashMap<>();
 	public ItemStack air = new ItemStack(Material.AIR);
 	public static Inventories inventories;
@@ -100,18 +101,20 @@ public class Inventories implements Listener {
 			e.setCancelled(true);
 			if (e.getClickedInventory().getType() == InventoryType.PLAYER)
 				selectItem(player, e.getCurrentItem());
-		} else if (e.getView().getTitle().equals(ChatColor.DARK_GREEN + "Enchantments")) {
+		} else if (e.getView().getTitle().contains(ChatColor.DARK_GREEN + "Enchantments Page ")) {
 			e.setCancelled(true);
 			if (e.getClickedInventory().getType() != InventoryType.CHEST)
 				return;
 			if (e.getCurrentItem().getType() == Material.ENCHANTED_BOOK) {
-				e.getCurrentItem().setItemMeta(numChange(e.getCurrentItem(), "Level: ", e.getClick()));
+				e.getCurrentItem().setItemMeta(numChange(e.getCurrentItem(), "Level: ", e.getClick(), false));
 				return;
 			}
-			if (e.getCurrentItem().getType() == Material.ARROW) {
+			if (e.getSlot() == 53) {
 				HashMap<String, Integer> enchants = new HashMap<>();
-				for (int x = 0; x < Enchantment.values().length; x++) {
-					ItemMeta meta = e.getView().getItem(x).getItemMeta();
+				for (int x = 0; x < Enchantment.values().length && x < 45 * enInv.get(e.getWhoClicked().getUniqueId()).size(); x++) {
+					
+					int page = (int)Math.floor(x/45);
+					ItemMeta meta = enInv.get(e.getWhoClicked().getUniqueId()).get(page).getItem(x - 45 * page).getItemMeta();
 					if (meta.hasLore() && !ChatColor.stripColor(meta.getLore().get(0)).equals("Level: 0")) {
 						enchants.put(ChatColor.stripColor(meta.getDisplayName()).replace(":", ""),
 								Integer.parseInt(ChatColor.stripColor(meta.getLore().get(0).replace("Level: ", ""))));
@@ -121,6 +124,26 @@ public class Inventories implements Listener {
 					enchant.put(e.getWhoClicked().getUniqueId(), enchants);
 				}
 				openInventory((Player) e.getWhoClicked(), Creation.lore);
+			}
+			else if ((e.getSlot() == 50 || e.getSlot() == 48) && e.getCurrentItem().getType() == Material.ARROW) {
+				int current = Integer.parseInt(ChatColor.stripColor(e.getView().getTitle().replace("Enchantments Page ", "")));
+				int change;
+				
+				//get up or down num
+				if (e.getSlot() == 50) change = current;
+				else change = current - 2;
+				
+				List<Inventory> invs = enInv.get(e.getWhoClicked().getUniqueId());
+				
+				//if list isn't big enough to contain this inventory, create it
+				if (invs.size() <= change) {
+					invs.add(Creation.get().Enchant(change));
+					
+					enInv.put(e.getWhoClicked().getUniqueId(), invs);
+				}
+				
+				//now just open it
+				openInventory((Player) e.getWhoClicked(), invs.get(change));
 			}
 		} else if (e.getView().getTitle().equals(ChatColor.DARK_AQUA + "Create Recipe")) {
 			if (e.getClickedInventory().getType() == InventoryType.CHEST
@@ -175,12 +198,34 @@ public class Inventories implements Listener {
 			if (e.getSlot() == 20 || e.getSlot() == 24 || e.getSlot() == 29) {
 				ItemStack current = e.getCurrentItem();
 				if (e.getSlot() == 24)
-					current.setItemMeta(numChange(e.getCurrentItem(), "", e.getClick()));
+					current.setItemMeta(numChange(e.getCurrentItem(), "", e.getClick(), false));
 				else
-					current.setItemMeta(numChange(e.getCurrentItem(), "Y: ", e.getClick()));
+					current.setItemMeta(numChange(e.getCurrentItem(), "Y: ", e.getClick(), true));
 				e.setCurrentItem(current);
 				return;
-			} else if (e.getSlot() == 35) {
+			} else if(e.getSlot() == 31) {	
+				ItemMeta lMeta = Creation.get().light.getItemMeta();
+				
+				if (e.getView().getItem(31).getType() == Material.FURNACE) {
+					e.getView().setItem(31, Creation.get().loreItem(Material.DROPPER, ChatColor.AQUA + "Ore Type", "Drops"));
+					
+					lMeta.setDisplayName("Drop Item Goes Here");
+				}	
+				else {
+					e.getView().setItem(31, Creation.get().loreItem(Material.FURNACE, ChatColor.AQUA + "Ore Type", "Smeltable"));
+					
+					lMeta.setDisplayName("Smelt Item Goes Here");
+				}
+				
+				
+				if (e.getView().getItem(22).getItemMeta().getDisplayName() == Creation.get().light.getItemMeta().getDisplayName()) {
+					Creation.get().light.setItemMeta(lMeta);
+					
+					e.getView().setItem(22, Creation.get().light);
+				} 
+				else Creation.get().light.setItemMeta(lMeta);
+			}
+			else if (e.getSlot() == 35) {
 				List<ItemStack> list = new ArrayList<>();
 				for (int x = 0; x < 36; x++) {
 					if (list != null)
@@ -267,16 +312,16 @@ public class Inventories implements Listener {
 		openInventory(player, Creation.get().ore());
 	}
 
-	private ItemMeta numChange(ItemStack item, String prefix, ClickType c) {
+	private ItemMeta numChange(ItemStack item, String prefix, ClickType c, boolean signed) {
 		ItemMeta bMeta = item.getItemMeta();
 		List<String> lore = new ArrayList<String>();
 		int level = Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) + 1;
 		if (c == ClickType.RIGHT) {
-			if ((Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) - 1) < 0)
+			if (!signed && (Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) - 1) < 0)
 				return bMeta;
 			level = Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) - 1;
 		} else if (c == ClickType.SHIFT_RIGHT) {
-			if ((Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) - 10) < 0)
+			if (!signed && (Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) - 10) < 0)
 				return bMeta;
 			level = Integer.parseInt(bMeta.getLore().get(0).replace(prefix, "")) - 10;
 		} else if (c == ClickType.SHIFT_LEFT)
@@ -302,7 +347,17 @@ public class Inventories implements Listener {
 			materials.put(player.getUniqueId(), OraxenItems.getIdByItem(item));
 		else
 			materials.put(player.getUniqueId(), item.getType().toString());
-		openInventory(player, Creation.get().Enchant());
+		
+		//create inventory, add it to list, and open it
+		Inventory en = Creation.get().Enchant(0);
+		
+		List<Inventory> invs = new ArrayList<Inventory>();
+		
+		invs.add(en);
+		
+		enInv.put(player.getUniqueId(), invs);
+		
+		openInventory(player, en);
 	}
 
 	private ItemStack giveItem(ClickType click, ItemStack cursor, ItemStack item) {

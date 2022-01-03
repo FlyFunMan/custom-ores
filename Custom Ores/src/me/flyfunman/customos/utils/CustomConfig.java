@@ -118,6 +118,7 @@ public class CustomConfig {
 		items().set("Example Ore.End", true);
 		items().set("Example Ore.Smelt Amount", 1);
 		items().set("Example Ore.Smelt Item", "blaze rod");
+		items().set("Example Ore.Drop Not Smelt", false);
 		items().set("Example Stick.Enabled", false);
 		items().set("Example Stick.Type", "stick");
 		items().set("Example Stick.Lore", "§aUsed as an example. An actual item would be enabled");

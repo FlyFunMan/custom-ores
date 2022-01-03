@@ -19,3 +19,7 @@ Tools:
   - GOLDEN_PICKAXE
   - DIAMOND_PICKAXE
   - NETHERITE_PICKAXE
+  
+#Allows custom enchanments from other plugins to display on the item
+#items that were spawned in before enabling this will not work in custom recipes!
+Custom Enchantments Display: false

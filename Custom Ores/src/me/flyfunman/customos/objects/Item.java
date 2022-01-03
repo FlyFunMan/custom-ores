@@ -8,8 +8,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import io.th0rgal.oraxen.items.OraxenItems;
 import me.flyfunman.customos.utils.CustomConfig;
 import me.flyfunman.customos.utils.ItemCreator;
+import me.flyfunman.customos.utils.RecipeCreator;
 
 public class Item {
 	public static List<Item> items = new ArrayList<>();
@@ -28,6 +30,7 @@ public class Item {
 	private int minY;
 
 	private ItemStack item;
+	private ItemStack smelt;
 
 	private HashMap<String, Integer> enchants = new HashMap<>();
 
@@ -55,6 +58,21 @@ public class Item {
 			}
 		}
 		item = ItemCreator.get().getStack(name);
+		
+		if (CustomConfig.items().contains(name + ".Smelt Item")) {
+			String s = CustomConfig.items().getString(name + ".Smelt Item").toLowerCase().replace(' ', '_');
+			int amount = 1;
+			if (CustomConfig.items().contains(name + ".Smelt Amount"))
+				amount = CustomConfig.items().getInt(name + ".Smelt Amount");
+			
+			smelt = ItemCreator.get().getFromString(s, amount);
+			if (smelt == null || !smelt.getType().isItem()) {
+				if (RecipeCreator.get().oraxen() && OraxenItems.exists(s.toLowerCase())) {
+					smelt = OraxenItems.getItemById(s.toLowerCase()).build();
+					smelt.setAmount(amount);
+				}
+			} 
+		}
 	}
 
 	public static void load() {
@@ -100,6 +118,10 @@ public class Item {
 
 	public String getName() {
 		return name;
+	}
+	
+	public ItemStack getSmelt() {
+		return smelt;
 	}
 
 	public String getLore() {

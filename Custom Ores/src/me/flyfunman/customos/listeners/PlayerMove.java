@@ -78,7 +78,8 @@ public class PlayerMove implements Listener {
 				Block blo = world.getBlockAt(randx, randy, randz);
 				if (blo.getType() == Material.STONE || blo.getType() == Material.DIORITE
 						|| blo.getType() == Material.ANDESITE || blo.getType() == Material.GRANITE
-						|| blo.getType() == Material.NETHERRACK || blo.getType() == Material.END_STONE) {
+						|| blo.getType() == Material.NETHERRACK || blo.getType() == Material.END_STONE 
+						|| blo.getType().toString() == "DEEPSLATE") {
 					Skulls.get().setHead(blo, ore.getValue());
 					time.put(bl, time.get(bl) - 1);
 				}

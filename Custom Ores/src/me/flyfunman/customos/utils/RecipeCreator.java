@@ -21,11 +21,14 @@ import io.th0rgal.oraxen.items.OraxenItems;
 import io.th0rgal.oraxen.recipes.CustomRecipe;
 import io.th0rgal.oraxen.recipes.listeners.RecipesEventsManager;
 import me.flyfunman.customos.Main;
+import me.flyfunman.customos.objects.Item;
 
 public class RecipeCreator {
 	private static RecipeCreator instance;
 	public static List<ShapedRecipe> recipes = new ArrayList<>();
 	Plugin plugin = Main.getPlugin(Main.class);
+	
+	private int reloads = 0;
 
 	public void createRecipes() {
 		if (!plugin.getConfig().getBoolean("Enabled"))
@@ -48,28 +51,21 @@ public class RecipeCreator {
 
 	@SuppressWarnings("deprecation")
 	public void addFurnace(String path) {
-		if (ItemCreator.get().getFromString(path, 1) != null) {
-			ItemStack result = null;
+		if (ItemCreator.get().getFromString(path, 1) != null 
+				&& !(CustomConfig.items().contains(path + ".Drop Not Smelt") && 
+				CustomConfig.items().getBoolean(path + ".Drop Not Smelt"))) {
 			RecipeChoice rc = new RecipeChoice.ExactChoice(ItemCreator.get().getFromString(path, 1));
 			String smelt = CustomConfig.items().getString(path + ".Smelt Item").toLowerCase().replace(' ', '_');
-			int amount = 1;
-			if (CustomConfig.items().contains(path + ".Smelt Amount"))
-				amount = CustomConfig.items().getInt(path + ".Smelt Amount");
 			
-			result = ItemCreator.get().getFromString(smelt, amount);
-			if (result == null || !result.getType().isItem()) {
-				if (oraxen() && OraxenItems.exists(smelt.toLowerCase())) {
-					result = OraxenItems.getItemById(smelt.toLowerCase()).build();
-					result.setAmount(amount);
-				} else {
-					plugin.getServer().getConsoleSender().sendMessage(
-							ChatColor.translateAlternateColorCodes('&', "&bCustom &aOres: &cThe Smelt Item for " + path
-									+ ", " + smelt + ", was not recognized. This smelting recipe cannot be created."));
-					return;
-				}
-			} 
-			Bukkit.addRecipe(
-					new FurnaceRecipe(new NamespacedKey(plugin, "customores_" + simplify(path.replace(' ', '_'))),
+			ItemStack result = Item.getItem(path, true).getSmelt();
+
+			if (result == null)
+				plugin.getServer().getConsoleSender().sendMessage(
+						ChatColor.translateAlternateColorCodes('&', "&bCustom &aOres: &cThe Smelt Item for " + path
+								+ ", " + smelt + ", was not recognized. This smelting recipe cannot be created."));
+			
+			else Bukkit.addRecipe(
+					new FurnaceRecipe(new NamespacedKey(plugin, "customores_" + simplify(path.replace(' ', '_')) + reloads),
 							result, rc, (float) 0.2, 120));
 		}
 	}
@@ -104,7 +100,7 @@ public class RecipeCreator {
 		
 		//instantialize recipe
 		ShapedRecipe custom = new ShapedRecipe(
-				new NamespacedKey(plugin, "customores_" + simplify(path.replace(' ', '_'))), resultItem);
+				new NamespacedKey(plugin, "customores_" + simplify(path.replace(' ', '_')) + reloads), resultItem);
 		char[] recipeLetters = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I' };
 		String[] ingredients = { CustomConfig.recipes().getString(path + ".TopLeft"),
 				CustomConfig.recipes().getString(path + ".TopCenter"),
@@ -304,6 +300,8 @@ public class RecipeCreator {
 	}
 
 	public void clearRecipes() {
+		reloads++;
+		
 		Iterator<Recipe> it = Bukkit.getServer().recipeIterator();
 		while (it.hasNext()) {
 			Recipe r = it.next();

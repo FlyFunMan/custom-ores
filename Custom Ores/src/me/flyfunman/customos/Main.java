@@ -48,6 +48,9 @@ public class Main extends JavaPlugin implements Listener {
 		CustomConfig.items().options().copyDefaults(true);
 		CustomConfig.recipes().options().copyDefaults(true);
 		CustomConfig.saveAll();
+
+		Creation.get().setup();
+		
 		Item.load();
 		RecipeCreator.get().createRecipes();
 
@@ -65,8 +68,6 @@ public class Main extends JavaPlugin implements Listener {
 		pm.addPermission(new Permission("customores.reload"));
 
 		getCommand("customores").setTabCompleter(new ConstructTabCompleter());
-
-		Creation.get().setup();
 
 		getServer().getConsoleSender()
 				.sendMessage(ChatColor.translateAlternateColorCodes('&', "&bCustom &aOres &eLoaded Successfully"));

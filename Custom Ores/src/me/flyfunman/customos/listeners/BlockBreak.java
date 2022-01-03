@@ -15,6 +15,7 @@ import org.bukkit.plugin.Plugin;
 
 import me.flyfunman.customos.Main;
 import me.flyfunman.customos.objects.Item;
+import me.flyfunman.customos.utils.CustomConfig;
 import me.flyfunman.customos.utils.Skulls;
 
 public class BlockBreak implements Listener {
@@ -32,7 +33,19 @@ public class BlockBreak implements Listener {
 					if (item.isOre() && (item.getValue().equals(Skulls.get().getSkullValue(drop)))) {
 						e.setCancelled(true);
 						e.getBlock().setType(Material.AIR);
-						e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), item.getStack(1));
+						
+						ItemStack finalDrop = null;
+						
+						if (CustomConfig.items().contains(item.getName() + ".Smelt Item") &&
+								CustomConfig.items().contains(item.getName() + ".Drop Not Smelt") && 
+								CustomConfig.items().getBoolean(item.getName() + ".Drop Not Smelt"))
+							finalDrop = item.getSmelt();
+							
+						//fix drop item if it is null, then drop it
+						if (finalDrop == null)
+							finalDrop = item.getStack(1);
+						
+						e.getBlock().getWorld().dropItemNaturally(e.getBlock().getLocation(), finalDrop);
 					}
 			}
 		}
