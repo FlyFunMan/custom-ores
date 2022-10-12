@@ -33,6 +33,7 @@ public class Item {
 	private ItemStack smelt;
 
 	private HashMap<String, Integer> enchants = new HashMap<>();
+	private List<String> biomes = null;
 
 	public Item(String name) {
 		enabled = CustomConfig.items().getBoolean(name + ".Enabled");
@@ -50,6 +51,26 @@ public class Item {
 			numPerChunk = CustomConfig.items().getInt(name + ".NumberPerChunk");
 			maxY = CustomConfig.items().getInt(name + ".MaxY");
 			minY = CustomConfig.items().getInt(name + ".MinY");
+			
+			if (CustomConfig.items().getString(name + ".Biomes") != null) {
+				if (CustomConfig.items().getString(name + ".Biomes") != null &&
+						CustomConfig.items().getString(name + ".Biomes").equalsIgnoreCase("all")) biomes = null;
+
+				else {
+					biomes = CustomConfig.items().getStringList(name + ".Biomes");
+					
+					if (biomes.size() > 0) {
+						if(biomes.get(0).equalsIgnoreCase("all")) biomes = null;
+						
+						else if(biomes.get(0).equalsIgnoreCase("none")) biomes.clear();
+						
+						else
+							for (int i = 0; i < biomes.size(); i++)
+								biomes.set(i, biomes.get(i).toUpperCase().replace(' ', '_'));
+					}
+				}
+			}
+			
 		} else {
 			int level = 0;
 			for (String enchant : CustomConfig.items().getStringList(name + ".Enchantments.Types")) {
@@ -93,6 +114,17 @@ public class Item {
 		return null;
 	}
 
+	public boolean inBiome(String biome) {
+		if (biomes == null) return true;
+		
+		if (biomes.isEmpty()) return false;
+		
+		if (biomes.contains(biome)) return true;
+		
+		
+		return false;
+	}
+	
 	public boolean isOre() {
 		if (value == null) {
 			return false;

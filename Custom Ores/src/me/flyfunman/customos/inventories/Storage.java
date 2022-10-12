@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.objects.Item;
 
 public class Storage {
@@ -17,10 +18,10 @@ public class Storage {
 		}
 		size = roundUp(size, 9);
 		if (size == 0) {
-			player.sendMessage(ChatColor.RED + "You haven't created any items yet!");
+			player.sendMessage(CreateLang.getString(ChatColor.RED, "No Items"));
 			return;
 		}
-		Inventory get = Bukkit.createInventory(null, (int) size, ChatColor.GREEN + "Get Item");
+		Inventory get = Bukkit.createInventory(null, (int) size, CreateLang.getString(ChatColor.GREEN, "Get Item"));
 		size = 0;
 		for (Item item : Item.items) {
 			if (item.isEnabled()) {

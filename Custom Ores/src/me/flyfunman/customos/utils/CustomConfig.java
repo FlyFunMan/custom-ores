@@ -10,6 +10,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import me.flyfunman.customos.CreateLang;
+
 public class CustomConfig {
 	private static File file;
 	private static FileConfiguration storage;
@@ -28,8 +30,8 @@ public class CustomConfig {
 				storage = YamlConfiguration.loadConfiguration(file);
 				createStorage();
 			} catch (IOException e) {
-				Bukkit.getLogger().warning(
-						"Something went wrong during Storage.yml setup. This could cause problems when the server restarts. If this error continues, report it to the developer.");
+				Bukkit.getLogger().warning(CreateLang.getString(ChatColor.RED, "Setup Fail")
+						.replace("[file]", "Storage.yml"));
 			}
 		} else
 			storage = YamlConfiguration.loadConfiguration(file);
@@ -39,8 +41,8 @@ public class CustomConfig {
 				items = YamlConfiguration.loadConfiguration(file2);
 				createItemExample();
 			} catch (IOException e) {
-				Bukkit.getLogger().warning(
-						"Something went wrong during Items.yml setup. This could cause problems when the server restarts. If this error continues, report it to the developer.");
+				Bukkit.getLogger().warning(CreateLang.getString(ChatColor.RED, "Setup Fail")
+						.replace("[file]", "Items.yml"));
 			}
 		} else
 			items = YamlConfiguration.loadConfiguration(file2);
@@ -50,12 +52,18 @@ public class CustomConfig {
 				recipes = YamlConfiguration.loadConfiguration(file3);
 				createRecipeExample();
 			} catch (IOException e) {
-				Bukkit.getLogger().warning(
-						"Something went wrong during Recipes.yml setup. This could cause problems when the server restarts. If this error continues, report it to the developer.");
+				Bukkit.getLogger().warning(CreateLang.getString(ChatColor.RED, "Setup Fail")
+						.replace("[file]", "Recipes.yml"));
 			}
 		} else
 			recipes = YamlConfiguration.loadConfiguration(file3);
 		saveAll();
+	}
+	
+	public static void reassign() {
+		file = new File(Bukkit.getServer().getPluginManager().getPlugin("CustomOres").getDataFolder(), "Storage.yml");
+		file2 = new File(Bukkit.getServer().getPluginManager().getPlugin("CustomOres").getDataFolder(), "Items.yml");
+		file3 = new File(Bukkit.getServer().getPluginManager().getPlugin("CustomOres").getDataFolder(), "Recipes.yml");
 	}
 
 	public static void saveAll() {
@@ -68,8 +76,8 @@ public class CustomConfig {
 		try {
 			storage.save(file);
 		} catch (IOException e) {
-			Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.RED
-					+ "Couldn't save Storage.yml. This could cause problems when the server restarts. Please report this to the developer.");
+			Bukkit.getServer().getConsoleSender().sendMessage(CreateLang.getString(ChatColor.RED, "Save Fail")
+					.replace("[file]", "Storage.yml"));
 		}
 	}
 
@@ -77,8 +85,8 @@ public class CustomConfig {
 		try {
 			items.save(file2);
 		} catch (IOException e) {
-			Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.RED
-					+ "Couldn't save Items.yml. This could cause problems when the server restarts. Please report this to the developer.");
+			Bukkit.getServer().getConsoleSender().sendMessage(CreateLang.getString(ChatColor.RED, "Save Fail")
+					.replace("[file]", "Items.yml"));
 		}
 	}
 
@@ -86,8 +94,8 @@ public class CustomConfig {
 		try {
 			recipes.save(file3);
 		} catch (IOException e) {
-			Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.RED
-					+ "Couldn't save Recipes.yml. This could cause problems when the server restarts. Please report this to the developer.");
+			Bukkit.getServer().getConsoleSender().sendMessage(CreateLang.getString(ChatColor.RED, "Save Fail")
+					.replace("[file]", "Recipes.yml"));
 		}
 	}
 
@@ -107,7 +115,7 @@ public class CustomConfig {
 		items().options().header(
 				"Use https://custom-ores.fandom.com/wiki/Creating_an_Item and https://custom-ores.fandom.com/wiki/Creating_an_Ore Use § for color codes (e. g. §3) !!USING & WILL CAUSE PROBLEMS!!");
 		items().set("Example Ore.Enabled", false);
-		items().set("Example Ore.Lore", "§7Used as an example. An actual item would be enabled");
+		items().set("Example Ore.Lore", "§7Used as an example. An actual ore would be enabled");
 		items().set("Example Ore.Value",
 				"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmNjMTEzZGNjZTE1ZmE0NTRjODQ1ZTk5MDk2MmY1ZjE2YTJhOTZmOTk2NTkwYzE2ZTVlMjQ0M2U0ZjgwMTVjNCJ9fX0=");
 		items().set("Example Ore.NumberPerChunk", 5);
@@ -116,6 +124,9 @@ public class CustomConfig {
 		items().set("Example Ore.Overworld", true);
 		items().set("Example Ore.Nether", true);
 		items().set("Example Ore.End", true);
+		List<String> biomes = new ArrayList<>();
+		biomes.add("All");
+		items().set("Example Ore.Biomes", biomes);
 		items().set("Example Ore.Smelt Amount", 1);
 		items().set("Example Ore.Smelt Item", "blaze rod");
 		items().set("Example Ore.Drop Not Smelt", false);
@@ -149,6 +160,6 @@ public class CustomConfig {
 	}
 
 	public static void createStorage() {
-		storage().options().header("DO NOT MESS WITH THIS UNLESS YOU KNOW WHAT YOU'RE DOING!");
+		storage().options().header(CreateLang.getString(null, "Storage Header"));
 	}
 }

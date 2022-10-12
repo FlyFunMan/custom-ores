@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.inventories.Creation;
 import me.flyfunman.customos.utils.CustomConfig;
 import me.flyfunman.customos.utils.ItemCreator;
@@ -21,26 +22,27 @@ public class Create {
 
 	public void start(CommandSender sender, String[] args) {
 		if (!sender.isOp() && !(sender instanceof ConsoleCommandSender) && !sender.hasPermission("customores.create")) {
-			sender.sendMessage(ChatColor.RED + "You do not have permission to run this command.");
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "No Permission"));
 			return;
 		}
 		if (args.length >= 2) {
 			Player player = (Player) sender;
 			if (ores.containsKey(player.getUniqueId()) || items.containsKey(player.getUniqueId())) {
-				sender.sendMessage("You are already creating something!");
+				sender.sendMessage(CreateLang.getString(ChatColor.RED, "Already Creating"));
 				return;
 			}
 			if (args.length == 2 || (!args[2].equalsIgnoreCase("ore") && !args[2].equalsIgnoreCase("item")
 					&& !args[2].equalsIgnoreCase("recipe"))) {
-				sender.sendMessage(ChatColor.DARK_RED + "Incorrect command syntax. Please specify a type!");
+				sender.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Incorrect Command Syntax")
+						.replace("[command]", "/customores create <name> <type>"));
 				return;
 			}
 			if (!args[2].equalsIgnoreCase("recipe") && ItemCreator.get().isCustomColor(args[1])) {
-				player.sendMessage(ChatColor.DARK_RED + "An item/ore with this name already exists!");
+				player.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Already Exists").replace("[type]", args[2]));
 				return;
 			}
 			if (args[1].contains(".")) {
-				player.sendMessage(ChatColor.DARK_RED + "You have an illegal character in your name: .");
+				player.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Illegal Character").replace("[character]", "."));
 				return;
 			}
 			if (args[2].equalsIgnoreCase("ore")) {
@@ -52,14 +54,14 @@ public class Create {
 			} else {
 				if (ItemCreator.get().contains(CustomConfig.recipes().getKeys(false), args[1].replace('_', ' '))
 						|| simpleContains(CustomConfig.recipes().getKeys(false), args[1].replace(' ', '_'))) {
-					sender.sendMessage(ChatColor.DARK_RED + "A recipe with that name already exists!");
+					sender.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Already Exists").replace("[type]", args[2]));
 					return;
 				}
 				player.openInventory(Creation.get().Recipe(args[1].replace('_', ' ')));
 			}
 		} else
-			sender.sendMessage(
-					ChatColor.DARK_RED + "Incorrect command syntax. Please use /customores create <name> <type>");
+			sender.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Incorrect Command Syntax")
+							.replace("[command]", "/customores create <name> <type>"));
 	}
 
 	public boolean simpleContains(Collection<? extends String> c, String string) {

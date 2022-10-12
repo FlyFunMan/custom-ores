@@ -9,6 +9,7 @@ import org.bukkit.conversations.StringPrompt;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.Main;
 import me.flyfunman.customos.inventories.Creation;
 import me.flyfunman.customos.listeners.Inventories;
@@ -19,7 +20,7 @@ public class Conv extends StringPrompt {
 
 	@Override
 	public String getPromptText(ConversationContext arg0) {
-		return ChatColor.AQUA + "Type in the chat. You have 60 seconds.";
+		return CreateLang.getString(ChatColor.AQUA, "Chat");
 	}
 
 	@Override
@@ -29,7 +30,7 @@ public class Conv extends StringPrompt {
 			UUID uuid = player.getUniqueId();
 			if (Inventories.addtexture.contains(uuid)) {
 				if (ans.contains(" ")) {
-					cc.getForWhom().sendRawMessage(ChatColor.RED + "Please don't use spaces in the texture!");
+					cc.getForWhom().sendRawMessage(CreateLang.getString(ChatColor.RED, "No Spaces"));
 					return this;
 				} else {
 					Inventories.values.put(uuid, ans);

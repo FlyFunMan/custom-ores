@@ -12,6 +12,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.commands.Create;
 import me.flyfunman.customos.inventories.Creation;
 
@@ -21,7 +22,7 @@ public class InventoryClose implements Listener {
 	@EventHandler
 	public void closeEvent(InventoryCloseEvent e) {
 		String title = e.getView().getTitle();
-		if (title.equals(ChatColor.DARK_AQUA + "Create Recipe")) {
+		if (title.equals(CreateLang.getString(ChatColor.DARK_AQUA, "Create Recipe"))) {
 			for (int i : Creation.get().slots) {
 				ItemStack item = e.getView().getItem(i);
 				if (item != null && item.getType() != null && item.getType() != Material.AIR)
@@ -33,10 +34,10 @@ public class InventoryClose implements Listener {
 			return;
 		if (Create.items.containsKey(e.getPlayer().getUniqueId())) {
 			Create.items.remove(e.getPlayer().getUniqueId());
-			e.getPlayer().sendMessage(ChatColor.RED + "Item Creation Cancelled!");
+			e.getPlayer().sendMessage(CreateLang.getString(ChatColor.RED, "Item Cancel"));
 		} else if (Create.ores.containsKey(e.getPlayer().getUniqueId())) {
 			Create.ores.remove(e.getPlayer().getUniqueId());
-			e.getPlayer().sendMessage(ChatColor.RED + "Ore Creation Cancelled!");
+			e.getPlayer().sendMessage(CreateLang.getString(ChatColor.RED, "Ore Cancel"));
 		}
 	}
 

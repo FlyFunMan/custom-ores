@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Biome;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -17,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import io.th0rgal.oraxen.items.OraxenItems;
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.Main;
 import me.flyfunman.customos.commands.Create;
 import me.flyfunman.customos.inventories.Creation;
@@ -45,7 +47,7 @@ public class ItemCreator {
 			if (clearColor(item.replace('_', ' ')).equalsIgnoreCase(clearColor(name.replace('_', ' ')))) {
 				if (CustomConfig.items().contains(item + ".Enabled")
 						&& CustomConfig.items().getBoolean(item + ".Enabled")) {
-					ItemStack i;
+					ItemStack i = null;
 					if (CustomConfig.items().contains(item + ".Value")) {
 						if (!CustomConfig.storage().contains("UUIDS." + item)) {
 							CustomConfig.storage().set("UUIDS." + item, UUID.randomUUID().toString());
@@ -54,6 +56,13 @@ public class ItemCreator {
 						String url = CustomConfig.items().getString(item + ".Value");
 						i = Skulls.get().createSkull(url, item);
 					} else {
+						if (CustomConfig.items().getString(item + ".Type") == null) {
+							Bukkit.getServer().getConsoleSender().sendMessage(
+									ChatColor.translateAlternateColorCodes('&', "&e[&bCustom &aOres&e] ") + CreateLang.getString(
+											ChatColor.RED, "Type Not Recognized").replace("[type]", "").replace("[name]", item));
+							return null;
+						}
+						
 						name = CustomConfig.items().getString(item + ".Type").toLowerCase().replace(' ', '_');
 						if (RecipeCreator.get().oraxen() && OraxenItems.exists(name)) {
 							i = OraxenItems.getItemById(name).build();
@@ -68,10 +77,14 @@ public class ItemCreator {
 								i = new ItemStack(m);
 							
 							else {
-								Bukkit.getServer().getConsoleSender().sendMessage(
-										ChatColor.translateAlternateColorCodes('&', "&e[&bCustom &aOres&e] The type " + name
-												+ " for the item " + item + " was not recognized!"));
-								return null;
+								if (plugin.getConfig().getBoolean("Item Data For Type"))
+									i = ItemStack.deserialize(CustomConfig.items().getConfigurationSection(item + ".Type").getValues(false));
+								if (i == null) {
+									Bukkit.getServer().getConsoleSender().sendMessage(
+											ChatColor.translateAlternateColorCodes('&', "&e[&bCustom &aOres&e] ") + CreateLang.getString(
+													ChatColor.RED, "Type Not Recognized").replace("[type]", name).replace("[name]", item));
+									return null;
+								}
 							}
 						}
 					}
@@ -99,8 +112,8 @@ public class ItemCreator {
 							}
 							if (ench == null)
 								Bukkit.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-										"&bCustom &aOres: &cThe item " + item + "'s enchantment, " + enchants.get(x)) + 
-										", was not recognized. This enchantment will not be added");
+										"&e[&bCustom &aOres&e] ") + CreateLang.getString(ChatColor.RED, "Enchant Not Recognized")
+										.replace("[name]", item).replace("[enchant]", enchants.get(x)));
 							else {
 								i.addUnsafeEnchantment(ench, level);
 								
@@ -173,14 +186,17 @@ public class ItemCreator {
 	}
 
 	public String getFromItem(ItemStack item) {
-		if (item == null)
+		if (item == null || item.getType() == null)
 			return "air";
+
 		for (Item i : Item.items) {
-			if (item.getType() != null && item.getType() == Material.PLAYER_HEAD && i.isOre()) {
-				if ((i.getValue().equals(Skulls.get().getSkullValue(item))) && checkItemStrings(item, i))
+			if (item.getType() == Material.PLAYER_HEAD && i.isOre()) {
+
+				if (i.getValue().equals(Skulls.get().getSkullValue(item)) && checkItemStrings(item, i))
 					return i.getName();
 			} else {
 				String type = i.getType().toString();
+
 				if (item.getType().toString().equalsIgnoreCase(type)
 						|| (RecipeCreator.get().oraxen() && OraxenItems.getIdByItem(item) != null
 								&& OraxenItems.getIdByItem(item).equalsIgnoreCase(type))) {
@@ -194,15 +210,16 @@ public class ItemCreator {
 	}
 
 	private boolean checkItemStrings(ItemStack item, Item i) {
-		if (i.getLore() != null) {
-			if (item.getItemMeta().hasLore()
-					&& clearColor(i.getLore()).equals(ChatColor.stripColor(item.getItemMeta().getLore().get(0)))) {
-				return true;
-			}
+		if (i.getLore() != null && item.getItemMeta().hasLore()) {
+			//iterate through lores
+			for (String lore : item.getItemMeta().getLore())
+				if (clearColor(i.getLore()).equals(ChatColor.stripColor(lore))) {
+					return true;
+				}
 		} else if (clearColor(i.getName().replace('_', ' '))
-				.equals(ChatColor.stripColor(item.getItemMeta().getDisplayName()))) {
+				.equals(ChatColor.stripColor(item.getItemMeta().getDisplayName())))
 			return true;
-		}
+		
 		return false;
 	}
 
@@ -237,9 +254,35 @@ public class ItemCreator {
 					.parseInt(ChatColor.stripColor(view.get(20).getItemMeta().getLore().get(0).replace("Y: ", ""))));
 			CustomConfig.items().set(name + ".MinY", Integer
 					.parseInt(ChatColor.stripColor(view.get(29).getItemMeta().getLore().get(0).replace("Y: ", ""))));
+			
+			//Areas to spawn
 			CustomConfig.items().set(name + ".Overworld", toBoolean(view.get(0).getItemMeta().getLore().get(0)));
 			CustomConfig.items().set(name + ".Nether", toBoolean(view.get(4).getItemMeta().getLore().get(0)));
 			CustomConfig.items().set(name + ".End", toBoolean(view.get(8).getItemMeta().getLore().get(0)));
+			
+			if (Inventories.biome.containsKey(uuid)) {
+				List<String> biome = Inventories.biome.get(uuid);
+				List<String> biomes = new ArrayList<>();
+				//if empty
+				if (biome.isEmpty()) {
+					biomes.add("None");
+				}
+				//or all are there
+				else if (biome.size() == Biome.values().length) {
+					biomes.add("All");
+				}
+				
+				//otherwise
+				else
+					for (String bi : biome) {
+						biomes.add(ChatColor.stripColor(bi).replace(":", ""));
+					}
+				
+				CustomConfig.items().set(name + ".Biomes", biomes);
+				Inventories.biome.remove(uuid);
+			}
+			
+			//smelting stuff
 			CustomConfig.items().set(name + ".Smelt Amount", view.get(22).getAmount());
 			
 			//determine whether to drop or smelt
@@ -253,8 +296,9 @@ public class ItemCreator {
 				result = ItemCreator.get().getFromItem(view.get(22));
 			if (result == null || result.replace('_', ' ').equalsIgnoreCase("light gray stained glass pane"))
 				result = "air";
+			
 			Inventories.settings.remove(uuid);
-			Bukkit.getPlayer(uuid).sendRawMessage("Ore Created");
+			Bukkit.getPlayer(uuid).sendRawMessage(CreateLang.getString(null, "Ore Created"));
 			if (result != "air") {
 				CustomConfig.items().set(name + ".Smelt Item", result);
 				CustomConfig.saveItems();
@@ -277,7 +321,22 @@ public class ItemCreator {
 			String name = Create.items.get(uuid);
 			Create.items.remove(uuid);
 			addToConfig(name, uuid, lore);
-			CustomConfig.items().set(name + ".Type", Inventories.materials.get(uuid));
+			
+			//setting type or item data
+			ItemStack item = Inventories.materials.get(uuid);
+			
+			if (plugin.getConfig().getBoolean("Item Data For Type"))
+				CustomConfig.items().set(name + ".Type", item.serialize());
+				
+			else
+				if (RecipeCreator.get().oraxen() && OraxenItems.getIdByItem(item) != null)
+					CustomConfig.items().set(name + ".Type", OraxenItems.getIdByItem(item));
+				else
+					CustomConfig.items().set(name + ".Type", item.getType().toString());
+			
+			
+			
+			
 			if (Inventories.enchant.containsKey(uuid)) {
 				for (String enchant : Inventories.enchant.get(uuid).keySet()) {
 					CustomConfig.items().set(name + ".Enchantments.Types",
@@ -296,8 +355,13 @@ public class ItemCreator {
 				}
 				Inventories.enchant.remove(uuid);
 			}
-			Bukkit.getPlayer(uuid).sendRawMessage("Item Created");
+			Bukkit.getPlayer(uuid).sendRawMessage(CreateLang.getString(null, "Item Created"));
+
 			CustomConfig.saveItems();
+			
+			if (plugin.getConfig().getBoolean("Item Data For Type"))
+				CustomConfig.setup();
+
 			if (ItemCreator.get().getStack(name) != null)
 				Item.items.add(new Item(name));
 		}

@@ -20,6 +20,7 @@ import org.bukkit.plugin.Plugin;
 import io.th0rgal.oraxen.items.OraxenItems;
 import io.th0rgal.oraxen.recipes.CustomRecipe;
 import io.th0rgal.oraxen.recipes.listeners.RecipesEventsManager;
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.Main;
 import me.flyfunman.customos.objects.Item;
 
@@ -61,8 +62,8 @@ public class RecipeCreator {
 
 			if (result == null)
 				plugin.getServer().getConsoleSender().sendMessage(
-						ChatColor.translateAlternateColorCodes('&', "&bCustom &aOres: &cThe Smelt Item for " + path
-								+ ", " + smelt + ", was not recognized. This smelting recipe cannot be created."));
+						ChatColor.translateAlternateColorCodes('&', "&e[&bCustom &aOres&e] ") + CreateLang.getString(ChatColor.RED,
+								"Smelt Not Recognized").replace("[name]", path).replace("[result]", smelt));
 			
 			else Bukkit.addRecipe(
 					new FurnaceRecipe(new NamespacedKey(plugin, "customores_" + simplify(path.replace(' ', '_')) + reloads),
@@ -88,8 +89,8 @@ public class RecipeCreator {
 				resultItem = OraxenItems.getItemById(result.toLowerCase()).build();
 			} else {
 				plugin.getServer().getConsoleSender()
-						.sendMessage(ChatColor.translateAlternateColorCodes('&', "&bCustom &aOres: &cThe recipe " + path
-								+ "'s result, " + result + ", was not recognized. This recipe cannot be created."));
+						.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e[&bCustom &aOres&e] ") + CreateLang.getString(
+								ChatColor.DARK_RED, "Recipe Not Recognized").replace("[name]", path).replace("[result]", result));
 				return;
 			}
 		//check if result is oraxen if it is an item
@@ -117,9 +118,9 @@ public class RecipeCreator {
 			} else if (ItemCreator.get().getFromString(ingredients[x], 1) == null
 					&& !(oraxen() && OraxenItems.exists(ingredients[x].toLowerCase()))) {
 				plugin.getServer().getConsoleSender()
-						.sendMessage(ChatColor.translateAlternateColorCodes('&',
-								"&bCustom &aOres: &cThe ingredient " + ingredients[x] + " in the recipe " + path
-										+ " was not recognized. It will be set as air in the recipe."));
+						.sendMessage(ChatColor.translateAlternateColorCodes('&', "&e[&bCustom &aOres&e] ") 
+								+ CreateLang.getString(ChatColor.RED, "Ingredient Not Recognized")
+								.replace("[ingredient]", ingredients[x]).replace("[name]", path));
 				recipeLetters[x] = ' ';
 			}
 		}

@@ -2,6 +2,8 @@ package me.flyfunman.customos;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -36,9 +38,13 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public class Main extends JavaPlugin implements Listener {
 	ChunkLoc chunkLoc = new ChunkLoc();
+	public static YamlConfiguration LANG;
+	public static File LANG_FILE;
 
 	@Override
 	public void onEnable() {
+		loadLang();
+		
 		getConfig().options().copyDefaults(true);
 		saveDefaultConfig();
 		updateConfig();
@@ -94,7 +100,7 @@ public class Main extends JavaPlugin implements Listener {
 				}
 				if (changesMade)
 					tmp.save(getDataFolder() + "/config.yml");
-				getConfig().options().header("Explanation for the config can be found on the plugin page");
+				getConfig().options().header(CreateLang.getString(ChatColor.DARK_RED, "Config Warning"));
 			}
 		} catch (IOException | InvalidConfigurationException e) {
 			e.printStackTrace();
@@ -132,35 +138,41 @@ public class Main extends JavaPlugin implements Listener {
 			case "reload":
 				if (!sender.isOp() && !(sender instanceof ConsoleCommandSender)
 						&& !sender.hasPermission("customores.reload")) {
-					sender.sendMessage(ChatColor.RED + "You do not have permission to run this command!");
+					sender.sendMessage(CreateLang.getString(ChatColor.RED, "No Permission"));
 				} else {
 					reloadConfig();
+					
+					File file = new File(Bukkit.getServer().getPluginManager().getPlugin("CustomOres").getDataFolder(),
+							"Lang.yml");
+					Lang.setFile(YamlConfiguration.loadConfiguration(file));
+					
 					RecipeCreator.get().clearRecipes();
 					CustomConfig.setup();
 					Item.load();
 					RecipeCreator.get().createRecipes();
-					sender.sendMessage(ChatColor.GREEN + "Reloaded Successfully!");
+					sender.sendMessage(CreateLang.getString(ChatColor.GREEN, "Reloaded"));
 				}
 				return true;
 			}
 		}
-		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&bCustom &aOres &eHelp Menu"));
-		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&b/customores: &aOpens the help menu"));
-		player(sender, "&b/customores give: &aOpens the Get Item menu");
+		sender.sendMessage(CreateLang.getString(ChatColor.AQUA, "Help Menu"));
+		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', 
+				"&b/customores: " + CreateLang.getString(ChatColor.GREEN, "/customores")));
+		player(sender, "&b/customores give: " + CreateLang.getString(ChatColor.GREEN, "/customores give"));
 		sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
-				"&b/customores give <item> [amount] [player]: &aGrants a custom item or ore"));
+				"&b/customores give <item> [amount] [player]: ") 
+				+ CreateLang.getString(ChatColor.GREEN, "/customores give <item> [amount] [player]"));
 		sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
-				"&b/customores clear <world>: &aClears all ores in a world"));
+				"&b/customores clear <world>: ") + CreateLang.getString(ChatColor.GREEN, "/customores clear <world>"));
 		sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
-				"&b/customores generate <world>: &aRegenerates ores in a world"));
-		player(sender, "&b/customores create <name> <type>: &aOpens the item/ore/recipe creation menu");
+				"&b/customores generate <world>: ") + CreateLang.getString(ChatColor.GREEN, "/customores generate <world>"));
+		player(sender, "&b/customores create <name> <type>: " + CreateLang.getString(ChatColor.GREEN, "/customores create <name> <type>"));
 		sender.sendMessage(ChatColor.translateAlternateColorCodes('&',
-				"&b/customores delete <type> <name>: &aUsed to delete an item/ore/recipe."
-						+ " This is not reversable!"));
-		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&b/customores reload: &aReloads the config"));
+				"&b/customores delete <type> <name>: ") + CreateLang.getString(ChatColor.GREEN, "/customores delete <type> <name>"));
+		sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&b/customores reload: ")
+				+ CreateLang.getString(ChatColor.GREEN, "/customores reload"));
 		if (sender instanceof Player) {
-			TextComponent message = new TextComponent(ChatColor.translateAlternateColorCodes('&', 
-					"&2&lClick &e&ohere &2&lto open the Custom Ores Wiki"));
+			TextComponent message = new TextComponent(CreateLang.getString(ChatColor.ITALIC, "Wiki Link"));
 			message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://custom-ores.fandom.com/wiki/Custom_Ores_Wiki"));
 			((Player) sender).spigot().sendMessage(message);
 		}
@@ -170,5 +182,54 @@ public class Main extends JavaPlugin implements Listener {
 	private void player(CommandSender sender, String string) {
 		if (sender instanceof Player)
 			sender.sendMessage(ChatColor.translateAlternateColorCodes('&', string));
+	}
+	
+	public YamlConfiguration loadLang() {
+		File lang = new File(getDataFolder(), "lang.yml");
+		if (!lang.exists()) {
+			try {
+				getDataFolder().mkdir();
+				lang.createNewFile();
+				InputStream defConfigStream = this.getResource("lang.yml");
+				if (defConfigStream != null) {
+					YamlConfiguration defConfig = YamlConfiguration
+							.loadConfiguration(new InputStreamReader(defConfigStream));
+					defConfig.save(lang);
+					Lang.setFile(defConfig);
+					return defConfig;
+				}
+			} catch (IOException e) {
+				e.printStackTrace(); // So they notice
+				getLogger().severe(ChatColor.RED + "[Custom Ores] Couldn't create language file.");
+				getLogger().severe(ChatColor.RED + "[Custom Ores] This is a fatal error. Now disabling");
+				this.setEnabled(false); // Without it loaded, we can't send them messages
+			}
+		}
+		YamlConfiguration conf = YamlConfiguration.loadConfiguration(lang);
+		for (Lang item : Lang.values()) {
+			if (conf.getString(item.getPath()) == null) {
+				conf.set(item.getPath(), item.getDefault());
+			}
+		}
+		Lang.setFile(conf);
+		LANG = conf;
+		LANG_FILE = lang;
+		try {
+			conf.options().header("Use § for color codes (e. g. §3)");
+			conf.save(getLangFile());
+		} catch (IOException e) {
+			getLogger().warning(ChatColor.RED + "[Custom Ores] Failed to save lang.yml.");
+			getLogger().warning(ChatColor.RED + "[Custom Ores] Report this stack trace to the developer.");
+			e.printStackTrace();
+		}
+		return conf;
+	}
+
+	public YamlConfiguration getLang() {
+		return LANG;
+	}
+
+	public File getLangFile() {
+		return LANG_FILE;
 	}
 }

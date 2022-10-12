@@ -10,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.Plugin;
 
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.CustomOresAPI;
 import me.flyfunman.customos.Main;
 import me.flyfunman.customos.objects.Item;
@@ -19,17 +20,17 @@ import me.flyfunman.customos.utils.RecipeCreator;
 
 public class Delete {
 	private static Delete delete = new Delete();
-	private Generation gen = new Generation();
 	Plugin plugin = Main.getPlugin(Main.class);
 
 	public void start(CommandSender sender, String[] args) {
 		if (!sender.isOp() && !(sender instanceof ConsoleCommandSender) && !sender.hasPermission("customores.delete")) {
-			sender.sendMessage(ChatColor.RED + "You do not have permission to run this command.");
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "No Permission"));
 			return;
 		}
 
 		if (args.length < 3) {
-			sender.sendMessage(ChatColor.RED + "Incorrect Command Syntax. Use /customores delete <type> <name>");
+			sender.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Incorrect Command Syntax")
+					.replace("[command]", "/customores delete <type> <name>"));
 			return;
 		}
 
@@ -58,38 +59,19 @@ public class Delete {
 			}
 		}
 		if (path == null) {
-			sender.sendMessage(ChatColor.RED + args[2] + " was not recognized as a " + args[1] + ".");
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "Name Not Recognized")
+					.replace("[name]", args[2]).replace("[type]", args[1]));
 			return;
 		}
 
 		if (args.length < 4 || !args[3].equalsIgnoreCase("confirm")) {
-			sender.sendMessage(ChatColor.YELLOW + "Are you sure you want to delete " + args[2] + "?");
-			sender.sendMessage(ChatColor.RED + "This action cannot be undone");
+			sender.sendMessage(CreateLang.getString(ChatColor.YELLOW, "Delete Confirm 1").replace("[name]", args[2]));
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "Cannot Undo"));
 			if (args[1].equalsIgnoreCase("ore"))
-				sender.sendMessage(ChatColor.YELLOW + args[2] + " will be automatically cleared from all worlds,"
-						+ " this may cause some lag");
-			sender.sendMessage(ChatColor.GREEN + "If you want to delete " + args[2] + " type /co delete " + args[1]
-					+ " " + args[2] + " confirm");
+				sender.sendMessage(CreateLang.getString(ChatColor.YELLOW, "Delete Ore Confirm").replace("[name]", args[2]));
+			sender.sendMessage(CreateLang.getString(ChatColor.GREEN, "Delete Confirm 2").replace("[name]", args[2])
+					.replace("[command]", "/co delete " + args[1] + " " + args[2] + " confirm"));
 			return;
-		}
-
-		if (args[1].equalsIgnoreCase("ore")) {
-			sender.sendMessage(ChatColor.GREEN + "Starting to remove " + args[2] + " from all worlds");
-			for (World world : Bukkit.getWorlds()) {
-				if (!plugin.getConfig().getBoolean("All Worlds")
-						&& !plugin.getConfig().getList("Worlds").contains(world.getName())) {
-					continue;
-				}
-				if (plugin.getConfig().getBoolean("All Worlds")
-						&& plugin.getConfig().getList("Worlds").contains(world.getName())) {
-					continue;
-				}
-
-				gen.clear(world.getName(), path);
-			}
-			CustomConfig.storage().set("UUIDS." + path, null);
-			RecipeCreator.get().removeRecipe(path);
-			sender.sendMessage(ChatColor.GREEN + "Successfully removed " + args[2] + " from all worlds");
 		}
 
 		if (args[1].equalsIgnoreCase("recipe")) {
@@ -101,7 +83,28 @@ public class Delete {
 			CustomConfig.saveItems();
 			Item.items.remove(Item.getItem(path, false));
 		}
-		sender.sendMessage(ChatColor.GREEN + args[2] + " was removed successfully.");
+
+		if (args[1].equalsIgnoreCase("ore")) {
+			sender.sendMessage(CreateLang.getString(ChatColor.GREEN, "Delete Ore 1").replace("[name]", args[2]));
+			for (World world : Bukkit.getWorlds()) {
+				if (!plugin.getConfig().getBoolean("All Worlds")
+						&& !plugin.getConfig().getList("Worlds").contains(world.getName())) {
+					continue;
+				}
+				if (plugin.getConfig().getBoolean("All Worlds")
+						&& plugin.getConfig().getList("Worlds").contains(world.getName())) {
+					continue;
+				}
+
+				Generation gen = new Generation();
+				
+				gen.clear(sender, world.getName(), path);
+			}
+			CustomConfig.storage().set("UUIDS." + path, null);
+			RecipeCreator.get().removeRecipe(path);
+		}
+		
+		else sender.sendMessage(CreateLang.getString(ChatColor.GREEN, "Delete Success").replace("[name]", args[2]));
 	}
 
 	public List<String> itemToName(List<Item> items) {

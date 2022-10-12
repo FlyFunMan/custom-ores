@@ -11,7 +11,30 @@ Worlds:
   -
   -
 
+#The delay in ticks between each chunk being cleared using the /clear <world> command
+Clear World: 1
+
+#These are the blocks that ores can replace when spawning
+Spawn Blocks:
+  - STONE
+  - DIORITE
+  - ANDESITE
+  - GRANITE
+  - DEEPSLATE
+  - TUFF
+  - NETHERRACK
+  - END_STONE
+
+#Instead of placing the ores, ores will be replaced by chests with the ore inside
+Ores as Chests: false
+
+
 Drop in Creative: false
+
+#If true, ores that don't drop themselves can have these enchantments applied to them
+Allow Fortune: true
+Allow Silk Touch: true
+
 
 #Items on this list will break ores instantly.
 Tools:
@@ -23,3 +46,7 @@ Tools:
 #Allows custom enchanments from other plugins to display on the item
 #items that were spawned in before enabling this will not work in custom recipes!
 Custom Enchantments Display: false
+
+#When selecting an item to use while creating a custom item, saves item data in place of the type
+#Will still save items without data normally
+Item Data For Type: false

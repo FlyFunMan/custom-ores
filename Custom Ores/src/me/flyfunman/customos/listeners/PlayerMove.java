@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -51,7 +52,9 @@ public class PlayerMove implements Listener {
 						if ((l.getWorld().getEnvironment() == Environment.NORMAL && ore.isOverworld())
 								|| (l.getWorld().getEnvironment() == Environment.NETHER && ore.isNether())
 								|| (l.getWorld().getEnvironment() == Environment.THE_END && ore.isEnd())) {
-							startTimer(ore, x, z, l.getWorld(), ore.getNumPerChunk());
+
+							if (ore.inBiome(l.getBlock().getBiome().name()))
+								startTimer(ore, x, z, l.getWorld(), ore.getNumPerChunk());
 						}
 					}
 				}
@@ -76,11 +79,21 @@ public class PlayerMove implements Listener {
 				int randx = 1 + rand1 + x;
 				int randz = 1 + rand2 + z;
 				Block blo = world.getBlockAt(randx, randy, randz);
-				if (blo.getType() == Material.STONE || blo.getType() == Material.DIORITE
-						|| blo.getType() == Material.ANDESITE || blo.getType() == Material.GRANITE
-						|| blo.getType() == Material.NETHERRACK || blo.getType() == Material.END_STONE 
-						|| blo.getType().toString() == "DEEPSLATE") {
-					Skulls.get().setHead(blo, ore.getValue());
+				if (plugin.getConfig().getStringList("Spawn Blocks")
+						.contains(blo.getType().name())) {
+					
+					//spawn in chest instead
+					if (plugin.getConfig().getBoolean("Ores as Chests")) {
+						blo.setType(Material.CHEST);
+						
+						Chest chest = (Chest) blo.getState();
+						
+						chest.getBlockInventory().setItem(13, ore.getStack(1));
+					}
+					
+					else
+						Skulls.get().setHead(blo, ore.getValue());
+					
 					time.put(bl, time.get(bl) - 1);
 				}
 				tries.put(bl, tries.get(bl) - 1);

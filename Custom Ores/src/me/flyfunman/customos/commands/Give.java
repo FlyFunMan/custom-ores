@@ -6,13 +6,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
+import me.flyfunman.customos.CreateLang;
 import me.flyfunman.customos.inventories.Storage;
 import me.flyfunman.customos.utils.ItemCreator;
 
 public class Give {
 	public static void giveItem(CommandSender sender, String[] args) {
 		if (!sender.isOp() && !(sender instanceof ConsoleCommandSender) && !sender.hasPermission("customores.give")) {
-			sender.sendMessage(ChatColor.RED + "You do not have permission to run this command.");
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "No Permission"));
 			return;
 		}
 
@@ -20,13 +21,12 @@ public class Give {
 			if (sender instanceof Player)
 				Storage.open((Player) sender);
 			else
-				sender.sendMessage("Please specify an item");
+				sender.sendMessage(CreateLang.getString(ChatColor.RED, "Specify Item"));
 			return;
 		}
 
 		if (ItemCreator.get().getItem(args[1], 1) == null) {
-			sender.sendMessage(
-					ChatColor.RED + args[1] + " was not recognized. Please make sure it's enabled in the config.");
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "Not Recognized").replace("[name]", args[1]));
 			return;
 		}
 		Player player = null;
@@ -40,20 +40,22 @@ public class Give {
 			for (Player play : Bukkit.getOnlinePlayers()) {
 				if (play.getDisplayName().equalsIgnoreCase(args[3])) {
 					player = Bukkit.getPlayer(args[3]);
-					sender.sendMessage(player.getDisplayName() + " recieved " + amount + " "
-							+ ChatColor.translateAlternateColorCodes('&', args[1]).replace('_', ' '));
+					sender.sendMessage(CreateLang.getString(ChatColor.GREEN, "Recieved").replace("[player]", player.getDisplayName())
+							.replace("[amount]", "" + amount)
+							.replace("[name]", ChatColor.translateAlternateColorCodes('&', args[1]).replace('_', ' ')));
 				}
 			}
 			if (player == null) {
-				sender.sendMessage(args[3] + " is not online.");
+				sender.sendMessage(CreateLang.getString(ChatColor.DARK_RED, "Not Online").replace("[player]", args[3]));
 				return;
 			}
 		} else if (sender instanceof Player) {
 			player = (Player) sender;
-			player.sendMessage("You recieved " + amount + " "
-					+ ChatColor.translateAlternateColorCodes('&', args[1]).replace('_', ' '));
+			sender.sendMessage(CreateLang.getString(ChatColor.GREEN, "Recieved").replace("[player]", player.getDisplayName())
+					.replace("[amount]", "" + amount)
+					.replace("[name]", ChatColor.translateAlternateColorCodes('&', args[1]).replace('_', ' ')));
 		} else {
-			sender.sendMessage("Please specify a player");
+			sender.sendMessage(CreateLang.getString(ChatColor.RED, "Specify Player"));
 			return;
 		}
 
